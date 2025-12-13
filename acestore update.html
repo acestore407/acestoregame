@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>acestore — Game Download Center</title>
+
+  <style>
+    :root { --bg:#0f1724; --card:#0b1220; --accent:#06b6d4; --muted:#94a3b8; --glass:rgba(255,255,255,0.03); }
+    * { box-sizing:border-box; }
+    body {
+      margin:0; font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
+      color:#e6eef6;
+      background:linear-gradient(180deg,#071028 0%, #071827 60%);
+      min-height:100vh;
+    }
+    header { padding:18px 24px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .brand { display:flex; align-items:center; gap:12px; }
+    .logo {
+      width:48px; height:48px; border-radius:10px;
+      background:linear-gradient(135deg,#06b6d4,#7c3aed);
+      display:flex; align-items:center; justify-content:center;
+      font-weight:700; color:#04263b;
+    }
+    .title { font-size:20px; font-weight:700; }
+    nav a { color:var(--muted); text-decoration:none; margin-left:14px; }
+
+    .container { max-width:1100px; margin:24px auto; padding:0 20px; }
+    .hero { display:flex; gap:20px; align-items:center; }
+    .hero-left { flex:1; }
+    .hero-right { width:420px; }
+    h1 { font-size:34px; margin:0; color:#fff; }
+    p.lead { color:var(--muted); margin-top:8px; }
+
+    .search { margin-top:18px; display:flex; gap:10px; }
+    .search input {
+      flex:1; padding:12px; border-radius:10px;
+      border:1px solid rgba(255,255,255,0.06);
+      background:transparent; color:#fff;
+    }
+    .search button {
+      padding:12px 14px; border-radius:10px;
+      border:0; background:var(--accent);
+      color:#04263b; font-weight:700; cursor:pointer;
+    }
+
+    section { margin-top:30px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:18px; }
+    .card {
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      padding:14px; border-radius:12px;
+      border:1px solid rgba(255,255,255,0.04);
+    }
+    .card h3 { margin:0 0 6px 0; color:#fff; font-size:16px; }
+    .meta { color:var(--muted); font-size:13px; }
+    .card-actions { margin-top:10px; display:flex; gap:8px; }
+    .btn { padding:8px 12px; border-radius:8px; border:0; cursor:pointer; font-weight:600; }
+    .btn-download { background:var(--accent); color:#04263b; }
+    .btn-info {
+      background:transparent; color:var(--muted);
+      border:1px solid rgba(255,255,255,0.04);
+    }
+
+    footer { margin:60px 0 30px; color:var(--muted); text-align:center; }
+
+    .note { margin-top:14px; color:var(--muted); font-size:13px; }
+
+    /* admin only */
+    .admin-only { display:none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">AC</div>
+    <div>
+      <div class="title">acestore</div>
+      <div style="font-size:12px;color:var(--muted)">Game Download Center</div>
+    </div>
+  </div>
+  <nav>
+    <a href="#roms">ROMs</a>
+    <a href="#pc">Game PC</a>
+    <a href="#android">Game Android</a>
+    <a href="#manager">Admin</a>
+  </nav>
+</header>
+
+<main class="container">
+
+  <section class="hero">
+    <div class="hero-left">
+      <h1>Selamat datang di <span style="color:var(--accent)">acestore</span></h1>
+      <p class="lead">Pusat unduhan untuk ROMs, Game PC, dan Game Android. Semua link menggunakan <b>roms file yang asli</b>.</p>
+
+      <div class="search">
+        <input id="q" placeholder="Cari game..." oninput="renderCards()" />
+        <button onclick="renderCards()">Cari</button>
+      </div>
+    </div>
+
+    <div class="hero-right card admin-only">
+      <h3>Admin Mode</h3>
+      <p class="meta">Gunakan ALT + A untuk toggle tombol admin.</p>
+      <p class="small">"Set Link" hanya mengubah link di memori sementara (hilang saat refresh).</p>
+    </div>
+  </section>
+
+  <section id="roms">
+    <h2 style="color:#fff;margin-bottom:10px">ROMs</h2>
+    <div id="romList" class="grid"></div>
+  </section>
+
+  <section id="pc">
+    <h2 style="color:#fff;margin-top:28px">Game PC</h2>
+    <div id="pcList" class="grid"></div>
+  </section>
+
+  <section id="android">
+    <h2 style="color:#fff;margin-top:28px">Game Android</h2>
+    <div id="androidList" class="grid"></div>
+  </section>
+
+  <section id="manager" class="admin-only" style="margin-top:28px">
+    <h2 style="color:#fff">Admin - Edit Link (sementara)</h2>
+    <p class="small">Link hanya tersimpan di variabel JS, tidak permanent.</p>
+  </section>
+
+  <footer>
+    <div>© <span id="year"></span> Untuk Request game bisa hubungi kontak ACESTORE : Whatsapp 0895336270464, Email : Aceblood407@gmail.com </div>
+  </footer>
+</main>
+
+<script>
+  document.getElementById("year").innerText = new Date().getFullYear();
+
+  /* ==========================================================
+     SAMPLE DATA (Permanent)
+  ========================================================== */
+
+  const sampleData = {
+    roms: [
+      {id:'GTA SA BHS INDO', title:'GTA SA (PS2)', meta:'Format: .ISO', link:'https://sfl.gl/uRpSJ'},
+      {id:'PES 2026', title:'PES 2026 (PS2)', meta:'Format: .ISO', link:'https://sfl.gl/JaBY2S'},
+      {id:'GUITAR HERO II', title:'GUITAR HERO II (PS2)', meta:'Format: .ISO', link:'https://sfl.gl/3iicT8c2'},
+      {id: 'MORTAL KOMBAT SHAOLIN MONK', title: 'MORTAL KOMBAT SHAOLIN MONK (PS2)', meta: 'Format: .ISO', link: 'https://sfl.gl/gXWDG8FM'},
+      {id: 'LEGO INDIANA JONES', title: 'INDIANA JONES (PS2)', meta: 'Format: .ISO', link: 'https://sfl.gl/VrIB'},
+      {id: 'SENGOKU BASARA 2 HEROES', title: 'SENGOKU BASARA 2 HEROES (PS2)', meta: 'Format: .ISO', link: 'https://sfl.gl/n54vMv'},	
+      {id: 'LEGO BATMAN', title: 'LEGO BATMAN (PS2)', meta: 'Format: .ISO', link: 'https://sfl.gl/zqvcRaFF'},
+      {id: 'WE 2026', title: 'WE 2026 (PS2)', meta: 'Format: .ISO', link: 'https:https://sfl.gl/twz9Ksn0'},
+      {id: 'Naruto Shippuden Ultimate 5', title: 'Naruto Shippuden Ultimate 5 (PS2)', meta: 'Format: .ISO', link: 'https://sfl.gl/XnoLNeo'},
+      {id:'Roms Collections Mame 0.219', title:'Mame 0.219 Collections (MAME)', meta:'Format: .zip', link:'https://sfl.gl/6fLv26'},
+    ],
+    pc: [
+      {id:'GAME HOUSE FULL PACK', title:'GAME HOUSE FULL PACK', meta:'Format: .ZIP', link:'https://sfl.gl/sKoqtwo'},
+      {id:'EMULATOR PS2 PCSX FULL BIOS', title:'PCSX EMULATOR PS2', meta:'Format: .ZIP', link:'https://sfl.gl/45FuF8z'},
+      {id:'Reus 2 Ice Age', title:'Reus 2 Ice Age', meta:'Format: .ZIP', link:'https://sfl.gl/hSbuR4m'},
+      {id:'GodHood', title:'Godhood', meta:'Format: .ZIP', link:'https://sfl.gl/CM0vqFO'},
+      {id:'Outlast', title:'Outlast', meta:'Format: .ZIP', link:'https://sfl.gl/hSbuR4m'},
+    ],
+    android: [
+      {id:'COMING', title:'COMING SOON', meta:'APK + OBB', link:'#'}
+    ]
+  };
+
+  /* ==========================================================
+     MEMORY LINK STORAGE (No LocalStorage)
+  ========================================================== */
+
+  let memoryLinks = {}; // disimpan sementara selama halaman hidup
+
+  function getLink(id){
+    return memoryLinks[id] || findSample(id) || '#';
+  }
+
+  function findSample(id){
+    for(const group of Object.values(sampleData)){
+      for(const item of group){ if(item.id === id) return item.link; }
+    }
+    return '#';
+  }
+
+  function setLink(id){
+    const current = getLink(id);
+    const url = prompt(`Masukkan link baru untuk ${id}:`, current === '#' ? '' : current);
+    if(url === null) return;
+    memoryLinks[id] = url.trim();
+    renderCards();
+  }
+
+  /* ==========================================================
+     UI RENDER
+  ========================================================== */
+
+  function renderSection(target, items){
+    const el = document.getElementById(target);
+    el.innerHTML = '';
+
+    const q = document.getElementById('q').value.trim().toLowerCase();
+
+    items.forEach(item=>{
+      if(q && !item.title.toLowerCase().includes(q)) return;
+
+      const div = document.createElement('div');
+      div.className = 'card';
+
+      const link = getLink(item.id);
+
+      div.innerHTML = `
+        <h3>${item.title}</h3>
+        <div class="meta">${item.meta}</div>
+        <div class="card-actions">
+          <a href="${link}" target="_blank" class="btn btn-download">Download</a>
+          <button class="btn btn-info admin-only" onclick="setLink('${item.id}')">Set Link</button>
+        </div>
+      `;
+
+      el.appendChild(div);
+    });
+  }
+
+  function renderCards(){
+    renderSection('romList', sampleData.roms);
+    renderSection('pcList', sampleData.pc);
+    renderSection('androidList', sampleData.android);
+  }
+
+  /* ==========================================================
+     ADMIN MODE TOGGLE (ALT + A)
+  ========================================================== */
+
+  document.addEventListener('keydown', e =>{
+    if(e.altKey && e.key.toLowerCase() === 'a'){
+      document.querySelectorAll('.admin-only').forEach(x=>{
+        x.style.display = (x.style.display === 'none') ? '' : 'none';
+      });
+      alert('Admin mode toggled');
+    }
+  });
+
+  renderCards();
+</script>
+
+</body>
+</html>
